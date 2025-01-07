@@ -1,0 +1,9 @@
+interface IRewardState {
+    function setErc2OAddress(address _address) external;
+
+    function voteContent(uint8 content_id, int8 vote, address voter, uint256 stake) external;
+
+    function getReward(uint8 content_id) external;
+
+    function isRewarded(uint8 content_id) external view returns (bool);
+}
