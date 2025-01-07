@@ -16,7 +16,7 @@ sol_storage! {
         // gallery index to 
         mapping(uint256 =>  Gallery) room;
         // nft to result of stake
-        mapping(uint256 )
+        // mapping(uint256 )
     }
 
 
@@ -46,6 +46,7 @@ sol_storage! {
 
 }
 
+#[public]
 impl Stake {
     // so todo
     // so we will check if the nft exist and if the gallery exist;
@@ -58,4 +59,19 @@ impl Stake {
     // for the view functions
     // one will be able to see the total vots for the nfts and can call to see the top 5 votes
 
+    pub 
+
+}
+
+
+
+impl Stake{
+    pub fn update_le_ga(&mut self, gallery_id: U256){
+        // here we will only for with the top 4
+
+        let mut gallery = self.room.setter(gallery_id);
+        let first = gallery.
+
+
+    }
 }

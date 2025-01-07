@@ -2,7 +2,7 @@
 extern crate alloc;
 
 use alloy_primitives::{ Address, U256 };
-use stylus_sdk::{ prelude::*, msg, evm, block };
+use stylus_sdk::{ prelude::*, msg, evm };
 use alloy_sol_types::sol;
 // use alloy_sol_types::*;
 
@@ -15,8 +15,10 @@ sol_storage! {
         uint256 available_index;
         address admin;
         address libary;
+        address gallery_c;
     }
     pub struct Nft{
+        uint256 gallery;
         string data;
         address owner;
     }
@@ -26,6 +28,9 @@ sol_interface! {
     interface IMainx {
         function submitNft(uint256 gallery_id, address user, uint256 nft_data) external;
     }
+    interface ISubject {
+        function getUserStatus(uint256 gallery_index, address user) external view returns (bool);
+    }   
 }
 
 //  ======   Errors and Events  =========  //
@@ -55,6 +60,7 @@ impl NftStorage {
         let mut data_state = self.data.setter(available_index);
         data_state.data.set_str(data);
         data_state.owner.set(msg::sender());
+        data_state.gallery.set(gallery_id);
 
         self.available_index.set(available_index + U256::from(1));
 
@@ -67,14 +73,26 @@ impl NftStorage {
         Ok(())
     }
 
-    pub fn get_nft_data(&self, nft_id: U256) -> (Address, String) {
+    pub fn get_nft_data(&self, nft_id: U256) -> Result<(Address, String), SubmitError> {
         let data_x = self.data.getter(nft_id);
-        (data_x.owner.get(), data_x.data.get_string())
+        if !self.c_tik(data_x.gallery.get()) {
+            return Err(
+                SubmitError::InvalidParameter(InvalidParameter {
+                    point: 17,
+                })
+            );
+        }
+        Ok((data_x.owner.get(), data_x.data.get_string()))
     }
 
-    pub fn set_libary(&mut self, libary_address: Address) -> Result<(), SubmitError> {
+    pub fn set_libary(
+        &mut self,
+        libary_address: Address,
+        gallery: Address
+    ) -> Result<(), SubmitError> {
         self.check_admin().map_err(|e| { e })?;
         self.libary.set(libary_address);
+        self.gallery_c.set(gallery);
         Ok(())
     }
 }
@@ -83,6 +101,14 @@ impl NftStorage {
 
 // helper functions
 impl NftStorage {
+    pub fn c_tik(&self, gallery_index: U256) -> bool {
+        let user = msg::sender();
+        let address = self.gallery_c.get();
+        let gallery_contract = ISubject::new(address);
+        let config = Call::new();
+        gallery_contract.get_user_status(config, gallery_index, user).expect("drat")
+    }
+
     pub fn check_admin(&mut self) -> Result<bool, SubmitError> {
         let default_x = Address::from([0x00; 20]);
         if self.admin.get() != default_x && msg::sender() != self.admin.get() {
