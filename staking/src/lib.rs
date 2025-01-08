@@ -18,6 +18,9 @@ sol_storage! {
     pub struct Stake{
         // gallery index to 
         mapping(uint256 =>  Gallery) room;
+
+        // here will hold if user has voted
+        mapping(address => mapping(uint256 => bool)) voted;
         // this will be used for controled staking
         address stake_control;
         address admin;
@@ -89,6 +92,14 @@ impl Stake {
                 })
             );
         }
+
+        if self.has_voted(gallery_id, user) {
+            return Err(
+                StakeError::InvalidParameter(InvalidParameter {
+                    point: 4,
+                })
+            );
+        }
         let mut gallery = self.room.setter(gallery_id);
         let mut nft = gallery.nft.setter(nft_id);
 
@@ -112,6 +123,7 @@ impl Stake {
 
         // Call update_le_nft after releasing the mutable borrow of `nft`
         self.update_le_nft(gallery_id, nft_id, available_index, bid);
+        self.voted.setter(user).setter(gallery_id).set(true);
 
         evm::log(Stakes {
             voter: user,
@@ -195,6 +207,15 @@ impl Stake {
         self.check_admin().map_err(|e| { e })?;
         self.stake_control.set(stake);
         Ok(())
+    }
+
+    pub fn has_voted(&self, gallery_id: U256, user: Address) -> bool {
+        let ux = self.voted.getter(user);
+        let gx = ux.getter(gallery_id);
+        gx.get()
+    }
+    pub fn get_gallery_total_votes(&self, gallery_id: U256) -> U256 {
+        self.room.getter(gallery_id).total_votes.get()
     }
 }
 impl Stake {
