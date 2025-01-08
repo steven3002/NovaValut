@@ -21,15 +21,14 @@ sol_storage! {
 
 
     pub struct Gallery {
-        mapping(uint8 => uint256) leaderboard;
         uint256 total_votes;
 
         // this will map the nft id to the votes of that nft
-        mapping(uint256 => Vote) nft;
+        mapping(uint256 => Nft) nft;
         
     }
 
-    pub struct Vote {
+    pub struct Nft {
         mapping(uint8 => uint256) leaderboard;
         uint256 total_votes;
         // index casted votes
@@ -59,19 +58,36 @@ impl Stake {
     // for the view functions
     // one will be able to see the total vots for the nfts and can call to see the top 5 votes
 
-    pub 
+    // pub
 
 }
 
-
-
-impl Stake{
-    pub fn update_le_ga(&mut self, gallery_id: U256){
+impl Stake {
+    pub fn update_le_nft(&mut self, gallery_id: U256, nft_id: U256, vote_id: U256, bid: U256) {
         // here we will only for with the top 4
 
         let mut gallery = self.room.setter(gallery_id);
-        let first = gallery.
+        let mut nft = gallery.nft.setter(nft_id);
+        // first position on the leaderboard
+        let mut first = nft.leaderboard.setter(U8::from(0));
+        let mut secound = nft.leaderboard.setter(U8::from(1));
+        let mut third = nft.leaderboard.setter(U8::from(2));
+        let mut fourth = nft.leaderboard.setter(U8::from(3));
 
-
+        if bid > nft.casted.getter(first.get()).bid.get() {
+            // we will update the leaderboard
+            first.set(vote_id);
+            return;
+        } else if bid > nft.casted.getter(secound.get()).bid.get() {
+            secound.set(vote_id);
+            return;
+        } else if bid > nft.casted.getter(third.get()).bid.get() {
+            third.set(vote_id);
+            return;
+        } else if bid > nft.casted.getter(fourth.get()).bid.get() {
+            fourth.set(vote_id);
+            return;
+        }
+        return;
     }
 }
