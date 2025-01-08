@@ -24,6 +24,7 @@ sol_storage! {
         // this will be used for controled staking
         address stake_control;
         address admin;
+        address gallery_c;
         // nft to result of stake
     }
 
@@ -52,11 +53,19 @@ sol_storage! {
     // this will check the nft libary to check if a particular nft exist
 
 }
+sol_interface! {
+interface ISubject {
+    function getGallery(uint256 gallery_index) external view returns (address, string memory, string memory, uint32, uint64, uint256, uint64, uint64, uint256);
+    function getUserStatus(uint256 gallery_index, address user) external view returns (bool);
+}    
+}
 
 sol! {
     // event to show that a new gallary have been created
     event Stakes(address indexed voter, uint256 indexed gallery_id, uint256 nft_id, uint256 bid);
     error InvalidParameter(uint8 point);
+
+    
 }
 
 #[derive(SolidityError)]
@@ -203,9 +212,10 @@ impl Stake {
         leaderboard
     }
 
-    pub fn set_control(&mut self, stake: Address) -> Result<(), StakeError> {
+    pub fn set_control(&mut self, stake: Address, gallery: Address) -> Result<(), StakeError> {
         self.check_admin().map_err(|e| { e })?;
         self.stake_control.set(stake);
+        self.gallery_c.set(gallery);
         Ok(())
     }
 
@@ -258,5 +268,23 @@ impl Stake {
         } else {
             return Ok(true);
         }
+    }
+
+    // function to check if the user has a ticket
+    pub fn c_tik(&self, gallery_index: U256) -> bool {
+        let user = msg::sender();
+        let address = self.gallery_c.get();
+        let gallery_contract = ISubject::new(address);
+        let config = Call::new();
+        gallery_contract.get_user_status(config, gallery_index, user).expect("drat")
+    }
+
+    // info returns (start, end, minimum_bid)
+    pub fn get_gal_info(&self, gallery_index: U256) -> Result<(u64, u64, U256), ()> {
+        let address = self.gallery_c.get();
+        let gallery_contract = ISubject::new(address);
+        let config = Call::new();
+        let data = gallery_contract.get_gallery(config, gallery_index).expect("drat");
+        Ok((data.7, data.6, data.8))
     }
 }

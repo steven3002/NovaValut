@@ -79,14 +79,14 @@ impl Buy {
                 return Err(TicketError::NoData(NoData {}));
             }
         };
-
+        if price != U256::from(0){
         // Pay for the ticket and propagate errors
         self
             .fund_tf(creator, price)
             .map_err(|_| {
                 TicketError::InSufficientAllowance(InSufficientAllowance { gallery_index })
             })?;
-
+        }
         // set data in the gallery
         self.up_tik(gallery_index);
 
