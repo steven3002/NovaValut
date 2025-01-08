@@ -1,7 +1,7 @@
 #![cfg_attr(not(any(feature = "export-abi", test)), no_main)]
 extern crate alloc;
 
-use alloy_primitives::{ Address, U256 };
+use alloy_primitives::{ Address, U256, U8 };
 use stylus_sdk::{ prelude::*, msg, evm };
 use alloy_sol_types::sol;
 
@@ -64,30 +64,44 @@ impl Stake {
 
 impl Stake {
     pub fn update_le_nft(&mut self, gallery_id: U256, nft_id: U256, vote_id: U256, bid: U256) {
-        // here we will only for with the top 4
-
+        // Get mutable references to the gallery and NFT
         let mut gallery = self.room.setter(gallery_id);
         let mut nft = gallery.nft.setter(nft_id);
-        // first position on the leaderboard
-        let mut first = nft.leaderboard.setter(U8::from(0));
-        let mut secound = nft.leaderboard.setter(U8::from(1));
-        let mut third = nft.leaderboard.setter(U8::from(2));
-        let mut fourth = nft.leaderboard.setter(U8::from(3));
 
-        if bid > nft.casted.getter(first.get()).bid.get() {
-            // we will update the leaderboard
-            first.set(vote_id);
-            return;
-        } else if bid > nft.casted.getter(secound.get()).bid.get() {
-            secound.set(vote_id);
-            return;
-        } else if bid > nft.casted.getter(third.get()).bid.get() {
-            third.set(vote_id);
-            return;
-        } else if bid > nft.casted.getter(fourth.get()).bid.get() {
-            fourth.set(vote_id);
-            return;
+        // Cache the top 4 leaderboard positions
+        let mut leaderboard = [
+            nft.leaderboard.getter(U8::from(0)).get(),
+            nft.leaderboard.getter(U8::from(1)).get(),
+            nft.leaderboard.getter(U8::from(2)).get(),
+            nft.leaderboard.getter(U8::from(3)).get(),
+        ];
+
+        // Cache the bids for the top 4 positions
+        let mut bids = [
+            nft.casted.getter(leaderboard[0]).bid.get(),
+            nft.casted.getter(leaderboard[1]).bid.get(),
+            nft.casted.getter(leaderboard[2]).bid.get(),
+            nft.casted.getter(leaderboard[3]).bid.get(),
+        ];
+
+        // Check if the new bid qualifies for the leaderboard
+        for i in 0..4 {
+            if bid > bids[i] {
+                // Shift lower bids down the leaderboard
+                for j in (i + 1..4).rev() {
+                    leaderboard[j] = leaderboard[j - 1];
+                    bids[j] = bids[j - 1];
+                }
+                // Insert the new vote
+                leaderboard[i] = vote_id;
+                bids[i] = bid;
+                break;
+            }
         }
-        return;
+
+        // Update the leaderboard in storage
+        for (i, vote_id) in leaderboard.iter().enumerate() {
+            nft.leaderboard.setter(U8::from(i as u8)).set(*vote_id);
+        }
     }
 }
