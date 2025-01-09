@@ -221,7 +221,7 @@ impl Mainx {
         Ok(())
     }
 
-    pub fn get_nft_raw(
+    pub fn get_nft(
         &self,
         gallery_index: U256,
         nft_id: U256,

@@ -5,8 +5,6 @@ use alloy_primitives::{ Address, U256, U8, U32 };
 use stylus_sdk::{ prelude::*, msg, evm, block };
 use alloy_sol_types::sol;
 
-use stylus_sdk::call::Call;
-
 // so the nft will be minted with the gallery it was in
 // and the index of its resulting crowd staking
 
@@ -24,7 +22,6 @@ sol_storage! {
         // this will be used for controled staking
         address stake_control;
         address admin;
-        address gallery_c;
         // nft to result of stake
     }
 
@@ -53,19 +50,12 @@ sol_storage! {
     // this will check the nft libary to check if a particular nft exist
 
 }
-sol_interface! {
-interface ISubject {
-    function getGallery(uint256 gallery_index) external view returns (address, string memory, string memory, uint32, uint64, uint256, uint64, uint64, uint256);
-    function getUserStatus(uint256 gallery_index, address user) external view returns (bool);
-}    
-}
 
 sol! {
     // event to show that a new gallary have been created
     event Stakes(address indexed voter, uint256 indexed gallery_id, uint256 nft_id, uint256 bid);
+    event UpdatedCast(address indexed voter, uint256 indexed gallery_id, uint256 nft_id, uint256 old_bid, uint256 new_bid);
     error InvalidParameter(uint8 point);
-
-    
 }
 
 #[derive(SolidityError)]
@@ -75,17 +65,6 @@ pub enum StakeError {
 
 #[public]
 impl Stake {
-    // so todo
-    // so we will check if the nft exist and if the gallery exist;
-    // then we will check if they have voted; then we will check if they want to increase their bid or; add new bid
-    // check the erc contract to confirm that the transaction
-    //  we will update the storage
-
-    // view functions
-
-    // for the view functions
-    // one will be able to see the total vots for the nfts and can call to see the top 5 votes
-
     pub fn stake(
         &mut self,
         user: Address,
@@ -109,6 +88,7 @@ impl Stake {
                 })
             );
         }
+
         let mut gallery = self.room.setter(gallery_id);
         let mut nft = gallery.nft.setter(nft_id);
 
@@ -158,6 +138,7 @@ impl Stake {
                 })
             );
         }
+
         let mut gallery = self.room.setter(gallery_id);
         let mut nft = gallery.nft.setter(nft_id);
         let mut cast_vote = nft.casted.setter(vote_id);
@@ -168,10 +149,17 @@ impl Stake {
                 })
             );
         }
+        let old_bid = cast_vote.bid.get();
         cast_vote.bid.set(bid);
         cast_vote.updated.set(U32::from(block::timestamp()));
         self.update_le_nft(gallery_id, nft_id, vote_id, bid);
-
+        evm::log(UpdatedCast {
+            voter: user,
+            gallery_id,
+            nft_id,
+            old_bid,
+            new_bid: bid,
+        });
         Ok(())
     }
 
@@ -212,10 +200,9 @@ impl Stake {
         leaderboard
     }
 
-    pub fn set_control(&mut self, stake: Address, gallery: Address) -> Result<(), StakeError> {
+    pub fn set_control(&mut self, stake: Address) -> Result<(), StakeError> {
         self.check_admin().map_err(|e| { e })?;
         self.stake_control.set(stake);
-        self.gallery_c.set(gallery);
         Ok(())
     }
 
@@ -224,10 +211,12 @@ impl Stake {
         let gx = ux.getter(gallery_id);
         gx.get()
     }
+
     pub fn get_gallery_total_votes(&self, gallery_id: U256) -> U256 {
         self.room.getter(gallery_id).total_votes.get()
     }
 }
+
 impl Stake {
     pub fn update_le_nft(&mut self, gallery_id: U256, nft_id: U256, vote_id: U256, bid: U256) {
         // Get mutable references to the gallery and NFT
@@ -268,23 +257,5 @@ impl Stake {
         } else {
             return Ok(true);
         }
-    }
-
-    // function to check if the user has a ticket
-    pub fn c_tik(&self, gallery_index: U256) -> bool {
-        let user = msg::sender();
-        let address = self.gallery_c.get();
-        let gallery_contract = ISubject::new(address);
-        let config = Call::new();
-        gallery_contract.get_user_status(config, gallery_index, user).expect("drat")
-    }
-
-    // info returns (start, end, minimum_bid)
-    pub fn get_gal_info(&self, gallery_index: U256) -> Result<(u64, u64, U256), ()> {
-        let address = self.gallery_c.get();
-        let gallery_contract = ISubject::new(address);
-        let config = Call::new();
-        let data = gallery_contract.get_gallery(config, gallery_index).expect("drat");
-        Ok((data.7, data.6, data.8))
     }
 }

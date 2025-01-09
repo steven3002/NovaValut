@@ -6,10 +6,10 @@ use stylus_sdk::{ prelude::*, block, contract, msg };
 use stylus_sdk::call::Call;
 use alloy_sol_types::sol;
 
-const AIRDROP: u32 = 20_000_000;
+const AIRDROP: u32 = 200_000;
 
 // this will be the factor of reduction of the numbers of tokewns a user can get
-const SUBX: u32 = 7;
+const SUBX: u32 = 32;
 
 sol_storage! {
     #[entrypoint]
@@ -46,7 +46,6 @@ sol_storage! {
 
 sol_interface! {
     interface IErc20 {
-        function setAdmin(address admin) external;
         function mintTo(address to, uint256 value) external;
     }
 }
@@ -109,12 +108,11 @@ impl Users {
 
             //this will decrease the numbers of tokens a user will get
             let registerd_users = self.registerd_users.get();
-            let reduction = self.re_f();
+            let token = self.re_f();
             // Give new registrants some tokens
-            self.set_self_admin();
-            let token = U256::from(reduction);
-            self.mint_tkn(token, msg::sender());
-
+            if token >= U256::from(53) {
+                self.mint_tkn(token, msg::sender());
+            }
             self.registerd_users.set(registerd_users + U256::from(1));
         }
 
@@ -165,15 +163,6 @@ impl Users {
         let config = Call::new_in(self);
         let _ = meta_date_contract
             .mint_to(config, address, tkn)
-            .expect("Failed to call on MetaDate_contract");
-    }
-
-    pub fn set_self_admin(&mut self) {
-        let self_address = contract::address();
-        let meta_date_contract = IErc20::new(*self.erc20);
-        let config = Call::new_in(self);
-        let _ = meta_date_contract
-            .set_admin(config, self_address)
             .expect("Failed to call on MetaDate_contract");
     }
 

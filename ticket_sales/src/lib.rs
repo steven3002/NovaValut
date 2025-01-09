@@ -79,31 +79,31 @@ impl Buy {
                 return Err(TicketError::NoData(NoData {}));
             }
         };
-        if price != U256::from(0){
-        // Pay for the ticket and propagate errors
-        self
-            .fund_tf(creator, price)
-            .map_err(|_| {
-                TicketError::InSufficientAllowance(InSufficientAllowance { gallery_index })
-            })?;
+
+        if price != U256::from(0) {
+            // Pay for the ticket and propagate errors
+            self
+                .fund_tf(creator, price)
+                .map_err(|_| {
+                    TicketError::InSufficientAllowance(InSufficientAllowance { gallery_index })
+                })?;
         }
         // set data in the gallery
         self.up_tik(gallery_index);
 
         // this will send an event that the user has bought the ticket '
         evm::log(BoughtTicket {
-            buyer: msg::sender();
+            buyer: msg::sender(),
             gallery_index,
             price,
         });
 
-        // this event to to show the user that a ticket has been sold 
+        // this event to to show the user that a ticket has been sold
         evm::log(SoldTicket {
-            seller: creator;
+            seller: creator,
             gallery_index,
             price,
         });
-
 
         Ok(())
     }
