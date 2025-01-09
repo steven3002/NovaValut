@@ -101,6 +101,7 @@ impl NftStorage {
 
 // helper functions
 impl NftStorage {
+    // this checks if the user has a ticket to submit a nft
     pub fn c_tik(&self, gallery_index: U256) -> bool {
         let user = msg::sender();
         let address = self.gallery_c.get();
@@ -109,6 +110,7 @@ impl NftStorage {
         gallery_contract.get_user_status(config, gallery_index, user).expect("drat")
     }
 
+    // this is the lock that lockes a user as the admin of this contract; there by making sure that it can only be called once
     pub fn check_admin(&mut self) -> Result<bool, SubmitError> {
         let default_x = Address::from([0x00; 20]);
         if self.admin.get() != default_x && msg::sender() != self.admin.get() {
@@ -125,6 +127,7 @@ impl NftStorage {
         }
     }
 
+    // this is to update the main nft libary and create the identification of the nft
     pub fn pass_data(&mut self, gallery_id: U256, nft_data: U256) -> Result<(), SubmitError> {
         // Create a new instance of the ERC-20 interface
         let meta_date_contract = IMainx::new(*self.libary);

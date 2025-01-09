@@ -14,17 +14,17 @@ const SUBX: u32 = 32;
 sol_storage! {
     #[entrypoint]
     pub struct Users {
-        mapping(address => User) users;
-        address erc20;
-        address admin;
-        uint256 registerd_users;
+        mapping(address => User) users; // maps the user to their digital identity 
+        address erc20; // holds the smart contract address of the erc20;
+        address admin; // holds the one time admin wallet address; to make sure only the admin can change the contract address state
+        uint256 registerd_users; //holds the numbers of registered users
     }
 
-
+    // users can store their name and a set of profile data
     pub struct User{
-        bool has_registered;
-        string name;
-        Profile profile;
+        bool has_registered; // used to confirm that the user has or has not registered{mostly used for the airdrop}
+        string name; // name of a user 
+        Profile profile; // struct holding the user bio and meta_data
     }
 
 
@@ -38,18 +38,20 @@ sol_storage! {
         //one could store the index of an nft to save as their profile picture
         string meta_data;
 
-        uint32 joined_at;
-        uint32 last_updated;
+        uint32 joined_at;  // stores the time that the user registerd for the platform
+        uint32 last_updated; // stores teh last time the user updated their personal info
     }
 
 }
 
 sol_interface! {
+    // interface that allows this contract to perfrom minting to users wallet
     interface IErc20 {
         function mintTo(address to, uint256 value) external;
     }
 }
 sol! {
+
     error AlreadyRegistered(uint8 point );
     error EmptyField(uint8 point);
     error NotRegistered(uint8 point);
@@ -66,10 +68,6 @@ pub enum RegError {
 
 #[public]
 impl Users {
-    pub fn set_erc2o_address(&mut self, address: Address) {
-        self.erc20.set(address);
-    }
-
     pub fn register_user(
         &mut self,
         name: String,
