@@ -12,14 +12,12 @@ sol_storage! {
     pub struct Mainx {
         // this will be mapping the gallary inmdex with the 
         // mapping of the nfts with status; so the data will be transfered to the safe mapping
-        mapping(uint256 => Concept) gallary_data;
-        uint256 total_nft;
-        address gallery_c;
-        address nft_submit;
+        mapping(uint256 => Concept) gallery_data;
+        uint256 total_nft; //keeps track of the total_nft in a gallery
+        address gallery_c; //contract address of the gallery smart contract
+        address nft_submit; //contract address of the allowed storage of the nft meta_data
         address admin;
 
-
-        // PhantomData<NftData> phantom;
     }
 
     pub struct Nft{
@@ -28,17 +26,21 @@ sol_storage! {
         // 1 accepted 
         // 2 rejected
         uint8 status;
-        address owner;
-        uint256 data;
+        address owner; // creator of the nft
+        uint256 data; // the index of the meta_data in the nft_submit contract
     }
 
     pub struct Concept{
-        // the data_x is the raw data of the gallery
-        mapping(uint256 => Nft) data_x;
+        // the data_x is the raw data of the gallery; both reviewed and un reviewed nft
+        mapping(uint256 => Nft) data_x; 
         // this maps the accepted nft to a new index; for easy mapping in the staking cotract
-        mapping(uint256 => uint256) accepted;
-        uint256 available_index;
-        uint256 av_accepted_index;
+        // therefore to get a nft from the libary you will have to have the coordinate identity
+        // (gallery_id, nft_id)
+        // nft_id will be taged to this accepted 👇
+        mapping(uint256 => uint256) accepted; // this is the main nft id; where it is holding tghe raw data
+
+        uint256 available_index; // this is the index of the data_x;
+        uint256 av_accepted_index; // this is the index for the accepted nft
 
        
     }
@@ -96,16 +98,22 @@ impl Mainx {
         let (_creator, start) = self
             .get_gal_info(gallery_id)
             .map_err(|_| { NftError::InvalidParameter(InvalidParameter { point: 7 }) })?;
-        self.cd_ck(gallery_id, start)?;
+
+        // checking if the user has a ticket and to cnfirm that the event has not started
+        self.cd_ck(gallery_id, start, user)?;
+
+        // making sure that only the allowed contract can call this function
         if msg::sender() != self.nft_submit.get() {
             return Err(NftError::DeniedAccess(DeniedAccess { point: 1 }));
         }
+
         // add the nft to libary and create event to show that it was succesful
-        let mut gallery_con = self.gallary_data.setter(gallery_id);
-        let available_index = gallery_con.available_index.get();
-        let mut g_con_data = gallery_con.data_x.setter(available_index);
+        let mut gallery_con = self.gallery_data.setter(gallery_id); // getting the storagegaurd of the gallery index
+        let available_index = gallery_con.available_index.get(); // getting the avialable index of the raw nfts
+        let mut g_con_data = gallery_con.data_x.setter(available_index); // setting a new instance of a nft
         g_con_data.owner.set(user);
         g_con_data.data.set(nft_data);
+        gallery_con.available_index.set(avialable_index + U256::from(1));
 
         // this is to alart the gallery that a new nft has been submited for review
         evm::log(SubmitedNft {
@@ -118,11 +126,15 @@ impl Mainx {
     }
 
     // Accept an NFT
+    // this can only be called by the admin of the gallery
     pub fn set_nft_state(
         &mut self,
         gallery_id: U256,
         nft_id: U256,
-        state: u8
+        state: u8 // this is the value given to the nft under review
+        // state can either be 1 or 2
+        // where 1 is accepted (nft has been accepted join the gallery)
+        //  2 is rejected (nft is not allowed to have an identity under the gallery);
     ) -> Result<(), NftError> {
         // Retrieve gallery info
         let (creator, start) = self
@@ -140,13 +152,14 @@ impl Mainx {
         }
 
         // Check gallery's cooldown and gallery index
-        self.cd_ck(gallery_id, start)?;
+        // also checks if user has ticket (although creator automatically has a ticket)
+        self.cd_ck(gallery_id, start, msg::sender())?;
 
         // Access the gallery data
-        let mut gallery_con = self.gallary_data.setter(gallery_id);
+        let mut gallery_con = self.gallery_data.setter(gallery_id);
         let available_index = gallery_con.available_index.get();
 
-        // Validate the NFT ID
+        // Validate the NFT ID {making sure that it exist}
         if nft_id >= available_index {
             return Err(NftError::InvalidParameter(InvalidParameter { point: 1 }));
         }
@@ -154,10 +167,12 @@ impl Mainx {
         // Attempt to update the gallery data
         let updated = {
             let mut g_con_data = gallery_con.data_x.setter(nft_id);
+            // checking if the nft has been updated already
             if g_con_data.status.get() != U8::from(0) {
                 false
             } else {
-                g_con_data.status.set(U8::from(state)); // Assuming `status` should be `state`
+                // updating the status of the nft
+                g_con_data.status.set(U8::from(state));
                 true
             }
         };
@@ -166,8 +181,9 @@ impl Mainx {
             return Err(NftError::InvalidParameter(InvalidParameter { point: 1 }));
         }
 
-        let creator_address = gallery_con.data_x.getter(nft_id).owner.get();
-        let accepted_index = gallery_con.av_accepted_index.get();
+        let creator_address = gallery_con.data_x.getter(nft_id).owner.get(); //getting the address of the creator of the nft
+        // needed to created the nft identity in the gallery
+        let accepted_index = gallery_con.av_accepted_index.get(); //gettig the avialable accepted index
 
         // this means that the nft has been rejected
         if state == 2 {
@@ -184,13 +200,16 @@ impl Mainx {
         let mut acc_x = gallery_con.accepted.setter(accepted_index);
         acc_x.set(nft_id);
 
+        // emmiting that the nft has been accepted
         evm::log(AcceptedNft {
             creator: creator_address,
             gallery_id,
             approved_nft_id: accepted_index,
         });
 
+        // this is to increase the accepted index
         gallery_con.av_accepted_index.set(accepted_index + U256::from(1));
+
         // Update the total number of NFTs in the system
         let old_total = self.total_nft.get();
         self.total_nft.set(old_total + U256::from(1));
@@ -201,15 +220,19 @@ impl Mainx {
     // this is to return the lenght of the accepted list
     pub fn nft_list_len(&self, gallery_id: U256) -> Result<(U256, U256), NftError> {
         // add the nft to libary and create event to show that it was succesful
-        let gallery_con = self.gallary_data.getter(gallery_id);
+        let gallery_con = self.gallery_data.getter(gallery_id);
 
         let available_index = gallery_con.available_index.get();
 
         let len_t = gallery_con.av_accepted_index.get();
 
+        // this is returning the
+        // (lenght of the raw nfts in a gallery, lenght of the accepted nft in a gallery)
         Ok((available_index, len_t))
     }
 
+    // this is the countrol and safe function used by the admin to set
+    // the gallery contract address and the contract address that is storing the metaaata of the nft
     pub fn set_gallery_submit(
         &mut self,
         submit_address: Address,
@@ -221,22 +244,27 @@ impl Mainx {
         Ok(())
     }
 
+    // this is to get the data of an nft in a gallery
+    // returns
+    // (nft creator address, nft status, nft meta_data index)
     pub fn get_nft(
         &self,
         gallery_index: U256,
         nft_id: U256,
-        raw: bool
+        raw: bool // false to get the accepted nft with that index
+        // true to get the raw nft with the index of the nft_id
     ) -> Result<(Address, u8, U256), NftError> {
         // this is to get the index of the raw nft data;
         // Retrieve gallery info
         // raw if true then get raw state
-        let gallery_con = self.gallary_data.getter(gallery_index);
+        let gallery_con = self.gallery_data.getter(gallery_index);
         if raw {
             let (creator, _start) = self
                 .get_gal_info(gallery_index)
                 .map_err(|_| { NftError::InvalidParameter(InvalidParameter { point: 7 }) })?;
 
             // Check if the sender is the creator
+            // making sure that the raw can only be gotten by the admin of the gallery
             if creator != msg::sender() {
                 return Err(NftError::DeniedAccess(DeniedAccess { point: 1 }));
             }
@@ -245,8 +273,10 @@ impl Mainx {
 
             return Ok((g_c.owner.get(), g_c.status.get().to::<u8>(), g_c.data.get()));
         }
+        // getting the raw index storing the sub_data of the accepted nft
         let nc = gallery_con.accepted.getter(nft_id);
 
+        // getting the sub-data of the nft
         let g_c = gallery_con.data_x.getter(nc.get());
         Ok((g_c.owner.get(), g_c.status.get().to::<u8>(), g_c.data.get()))
     }
@@ -255,8 +285,7 @@ impl Mainx {
 // helper functions
 impl Mainx {
     // function to check if the user has a ticket
-    pub fn c_tik(&self, gallery_index: U256) -> bool {
-        let user = msg::sender();
+    pub fn c_tik(&self, gallery_index: U256, user: Address) -> bool {
         let address = self.gallery_c.get();
         let gallery_contract = ISubject::new(address);
         let config = Call::new();
@@ -273,11 +302,11 @@ impl Mainx {
         Ok((data.0, data.7))
     }
 
-    pub fn cd_ck(&self, gallery_id: U256, start: u64) -> Result<bool, NftError> {
+    pub fn cd_ck(&self, gallery_id: U256, start: u64, user: Address) -> Result<bool, NftError> {
         // check if the gallery_id is correct
         // if they have a ticket
         // and to make sure that the event have not yet started.
-        if !self.c_tik(gallery_id) || start <= block::timestamp() {
+        if !self.c_tik(gallery_id, user) || start <= block::timestamp() {
             return Err(
                 NftError::InvalidParameter(InvalidParameter {
                     point: 11,

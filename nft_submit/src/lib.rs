@@ -53,8 +53,6 @@ pub enum SubmitError {
 #[public]
 impl NftStorage {
     pub fn submit_nft(&mut self, gallery_id: U256, data: String) -> Result<(), SubmitError> {
-        // first we will check if the parameters can be passed
-
         let available_index = self.available_index.get();
         self.pass_data(gallery_id, available_index).map_err(|e| { e })?;
         let mut data_state = self.data.setter(available_index);
