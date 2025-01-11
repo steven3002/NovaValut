@@ -3,7 +3,6 @@ extern crate alloc;
 
 use alloy_primitives::{ Address, U8, U256 };
 use stylus_sdk::{ prelude::*, msg, block, evm };
-use core::{ marker::PhantomData };
 use alloy_sol_types::sol;
 use stylus_sdk::call::Call;
 
@@ -59,8 +58,8 @@ sol! {
 
     
 
-    event AcceptedNft(address indexed creator, uint256 gallery_id, uint256 approved_nft_id);
-    event RegetedNft(address indexed creator, uint256 gallery_id, uint256 nft_id);
+    event AcceptedNft(address indexed creator, uint256 indexed gallery_id, uint256 approved_nft_id);
+    event RegetedNft(address indexed creator, uint256 indexed gallery_id, uint256 nft_id);
     event SubmitedNft(uint256 indexed gallery_id, address creator, uint256 nft_index);
 
   
@@ -99,7 +98,7 @@ impl Mainx {
             .get_gal_info(gallery_id)
             .map_err(|_| { NftError::InvalidParameter(InvalidParameter { point: 7 }) })?;
 
-        // checking if the user has a ticket and to cnfirm that the event has not started
+        // checking if the user has a ticket and to confirm that the event has not started
         self.cd_ck(gallery_id, start, user)?;
 
         // making sure that only the allowed contract can call this function
@@ -113,7 +112,7 @@ impl Mainx {
         let mut g_con_data = gallery_con.data_x.setter(available_index); // setting a new instance of a nft
         g_con_data.owner.set(user);
         g_con_data.data.set(nft_data);
-        gallery_con.available_index.set(avialable_index + U256::from(1));
+        gallery_con.available_index.set(available_index + U256::from(1)); // create new raw index
 
         // this is to alart the gallery that a new nft has been submited for review
         evm::log(SubmitedNft {

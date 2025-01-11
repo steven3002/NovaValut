@@ -1,0 +1,227 @@
+[
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "gallery_id",
+                "type": "uint256"
+            },
+            {
+                "internalType": "address",
+                "name": "user",
+                "type": "address"
+            },
+            {
+                "internalType": "uint256",
+                "name": "nft_data",
+                "type": "uint256"
+            }
+        ],
+        "name": "submitNft",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "gallery_id",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "nft_id",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint8",
+                "name": "state",
+                "type": "uint8"
+            }
+        ],
+        "name": "setNftState",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "gallery_id",
+                "type": "uint256"
+            }
+        ],
+        "name": "nftListLen",
+        "outputs": [
+            {
+                "internalType": "tuple",
+                "components": [
+                    {
+                        "internalType": "uint256",
+                        "name": "total",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "active",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "",
+                "type": "tuple"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "submit_address",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "gallery_address",
+                "type": "address"
+            }
+        ],
+        "name": "setGallerySubmit",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "gallery_index",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "nft_id",
+                "type": "uint256"
+            },
+            {
+                "internalType": "bool",
+                "name": "raw",
+                "type": "bool"
+            }
+        ],
+        "name": "getNft",
+        "outputs": [
+            {
+                "internalType": "tuple",
+                "components": [
+                    {
+                        "internalType": "address",
+                        "name": "owner",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "uint8",
+                        "name": "state",
+                        "type": "uint8"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "nft_data",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "",
+                "type": "tuple"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "gallery_index",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "nft_id",
+                "type": "uint256"
+            },
+            {
+                "internalType": "bool",
+                "name": "raw",
+                "type": "bool"
+            }
+        ],
+        "name": "getNftData",
+        "outputs": [
+            {
+                "internalType": "tuple",
+                "components": [
+                    {
+                        "internalType": "address",
+                        "name": "owner",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "uint8",
+                        "name": "state",
+                        "type": "uint8"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "nft_data",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "",
+                "type": "tuple"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint8",
+                "name": "errorCode",
+                "type": "uint8"
+            }
+        ],
+        "name": "InvalidParameter",
+        "type": "error"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "required",
+                "type": "uint256"
+            }
+        ],
+        "name": "InSufficientAllowance",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "NoData",
+        "type": "error"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint8",
+                "name": "accessLevel",
+                "type": "uint8"
+            }
+        ],
+        "name": "DeniedAccess",
+        "type": "error"
+    }
+]

@@ -1,0 +1,103 @@
+[
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "gallery_id",
+                "type": "uint256"
+            },
+            {
+                "internalType": "string",
+                "name": "data",
+                "type": "string"
+            }
+        ],
+        "name": "submitNft",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "nft_id",
+                "type": "uint256"
+            }
+        ],
+        "name": "getNftData",
+        "outputs": [
+            {
+                "internalType": "tuple",
+                "components": [
+                    {
+                        "internalType": "address",
+                        "name": "owner",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "string",
+                        "name": "data",
+                        "type": "string"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "galleryId",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "",
+                "type": "tuple"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "nft_id",
+                "type": "uint256"
+            }
+        ],
+        "name": "systemMint",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "libary_address",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "gallery",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "minter",
+                "type": "address"
+            }
+        ],
+        "name": "setLibary",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint8",
+                "name": "code",
+                "type": "uint8"
+            }
+        ],
+        "name": "InvalidParameter",
+        "type": "error"
+    }
+]

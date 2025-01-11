@@ -250,17 +250,10 @@ impl Subject {
     //     // this is the function that get the user created gallery or joined gallary
     pub fn get_uc(&self, index: u64, user: Address, state: u8) -> Result<U256, GalleryError> {
         let state_data = self.state.getter(user);
-        if index >= (state_data.created_gallery.len() as u64) {
-            return Err(
-                GalleryError::InvalidParameter(InvalidParameter {
-                    point: 2,
-                })
-            );
-        }
 
         let data = match state {
-            0 => state_data.created_gallery.get(index as usize),
-            1 => state_data.created_gallery.get(index as usize),
+            0 => state_data.created_gallery.get(index as usize), // get the gallery that was created by the user
+            1 => state_data.joined_gallery.get(index as usize), // get the gallery that was joined by the uesr
             _ => None, // Return None if the state is not recognized
         };
 
