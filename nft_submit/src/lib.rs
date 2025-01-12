@@ -62,7 +62,8 @@ pub enum SubmitError {
 impl NftStorage {
     // called to submit an nft to a gallery in the platform
     pub fn submit_nft(&mut self, gallery_id: U256, data: String) -> Result<(), SubmitError> {
-        let available_index = self.available_index.get(); // getting an identity for the new nft
+        // starting it from 1; because the none value is <0> and that can cause permission parralex error
+        let available_index = self.available_index.get() + U256::from(1); // getting an identity for the new nft
 
         // passing the data, is also used to check the parameters of the conditions like if the user has a ticket and to make sure that the event has not started
         self.pass_data(gallery_id, available_index)?;
@@ -73,7 +74,7 @@ impl NftStorage {
         data_state.owner.set(msg::sender());
         data_state.gallery.set(gallery_id);
 
-        self.available_index.set(available_index + U256::from(1)); // creating a new identity
+        self.available_index.set(available_index); // creating a new identity
 
         evm::log(SubmitNft {
             owner: msg::sender(),
