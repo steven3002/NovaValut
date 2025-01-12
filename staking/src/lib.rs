@@ -164,7 +164,8 @@ impl Stake {
                 })
             );
         }
-
+        // gets the old bid for the event
+        let old_bid = cast_vote.bid.get();
         // setting the new bid
         cast_vote.bid.set(bid);
         cast_vote.updated.set(U32::from(block::timestamp())); //set time of operation
