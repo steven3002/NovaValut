@@ -80,7 +80,7 @@ impl Stake {
         bid: U256 //vote value
     ) -> Result<(), StakeError> {
         // this makes sure that ony the safew contract can call this function
-        if msg::sender() != self.admin.get() {
+        if msg::sender() != self.stake_control.get() {
             return Err(
                 StakeError::InvalidParameter(InvalidParameter {
                     point: 3,
@@ -144,7 +144,7 @@ impl Stake {
         bid: U256 // new bid
     ) -> Result<(), StakeError> {
         // makes sure that only the safe contract can call this function
-        if msg::sender() != self.admin.get() {
+        if msg::sender() != self.stake_control.get() {
             return Err(
                 StakeError::InvalidParameter(InvalidParameter {
                     point: 11,

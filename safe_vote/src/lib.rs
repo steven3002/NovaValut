@@ -90,10 +90,20 @@ impl Cast {
             );
         }
 
-        self.check_time(start, end)?; //checks if the gallery voting period has started
+        // self.check_time(start, end)?; //checks if the gallery voting period has started
+
+        let default_x = Address::from([0x00; 20]);
         let nft_creator = self.get_creator(gallery_id, nft_id)?; //gets the creator of the nft
 
-        self.fund_tf(nft_creator, bid)?; // attempts to transfer the funds to the creator
+        if nft_creator == default_x {
+            return Err(
+                CastError::InvalidParameter(InvalidParameter {
+                    point: 109,
+                })
+            );
+        }
+
+        self.fund_tf(msg::sender(), bid)?; // attempts to transfer the funds to the creator
         self.stake(gallery_id, nft_id, bid)?; // pass data to the unsafe contract
         Ok(())
     }
@@ -146,12 +156,14 @@ impl Cast {
         &mut self,
         stake: Address, // unsafe stake contract address
         erc20: Address, // token address
-        gallery: Address // gallery address
+        gallery: Address, // gallery address
+        libary: Address //nft_ libary contract address
     ) -> Result<(), CastError> {
         self.check_admin().map_err(|e| { e })?; // makes sure only the admin can call this function
         self.stake.set(stake);
         self.gallery_c.set(gallery);
         self.erc20.set(erc20);
+        self.nft_libary.set(libary);
         Ok(())
     }
 }
@@ -230,7 +242,7 @@ impl Cast {
 
     // check if the user has voted
     pub fn has_voted(&self, gallery_id: U256) -> bool {
-        let address = self.gallery_c.get();
+        let address = self.stake.get();
         let gallery_contract = IStake::new(address);
         let config = Call::new();
         gallery_contract.has_voted(config, gallery_id, msg::sender()).expect("drat")
@@ -275,12 +287,11 @@ impl Cast {
         let address = self.nft_libary.get();
         let gallery_contract = IMainx::new(address);
         let config = Call::new();
-        let default_x = Address::from([0x00; 20]);
 
         // Use a match to handle the result of `get_nft`
         match gallery_contract.get_nft(config, gallery_id, nft_id, false) {
-            Ok((creator, _, _)) if creator != default_x => Ok(creator),
-            Ok(_) => Err(CastError::InvalidParameter(InvalidParameter { point: 191 })),
+            Ok((creator, _, _)) => Ok(creator),
+            // Ok(_) => Err(CastError::InvalidParameter(InvalidParameter { point: 191 })),
             Err(_) => Err(CastError::InvalidParameter(InvalidParameter { point: 181 })),
         }
     }

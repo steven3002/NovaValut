@@ -277,6 +277,7 @@ impl Mainx {
 
         // getting the sub-data of the nft
         let g_c = gallery_con.data_x.getter(nc.get());
+        // returns the (creator of the nft, status of the nft, the metadat index of the nft)
         Ok((g_c.owner.get(), g_c.status.get().to::<u8>(), g_c.data.get()))
     }
 }
