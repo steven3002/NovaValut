@@ -62,7 +62,7 @@ pub enum SubmitError {
 impl NftStorage {
     // called to submit an nft to a gallery in the platform
     pub fn submit_nft(&mut self, gallery_id: U256, data: String) -> Result<(), SubmitError> {
-        // starting it from 1; because the none value is <0> and that can cause permission parralex error
+        // starting it from 1; because the none value is <0> and that can cause permission parallax error
         let available_index = self.available_index.get() + U256::from(1); // getting an identity for the new nft
 
         // passing the data, is also used to check the parameters of the conditions like if the user has a ticket and to make sure that the event has not started
@@ -168,7 +168,7 @@ impl NftStorage {
 
     // this is to update the main nft libary and create the identification of the nft
     pub fn pass_data(&mut self, gallery_id: U256, nft_data: U256) -> Result<(), SubmitError> {
-        // Create a new instance of the ERC-20 interface
+        // Create a new instance of the  interface
         let meta_date_contract = IMainx::new(*self.libary);
 
         // Set up the call configuration

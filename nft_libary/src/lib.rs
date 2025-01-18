@@ -108,11 +108,12 @@ impl Mainx {
 
         // add the nft to libary and create event to show that it was succesful
         let mut gallery_con = self.gallery_data.setter(gallery_id); // getting the storagegaurd of the gallery index
-        let available_index = gallery_con.available_index.get(); // getting the avialable index of the raw nfts
+        // starting index from 1 to stop parallax error from zero value return
+        let available_index = gallery_con.available_index.get() + U256::from(1); // getting the avialable index of the raw nfts
         let mut g_con_data = gallery_con.data_x.setter(available_index); // setting a new instance of a nft
         g_con_data.owner.set(user);
         g_con_data.data.set(nft_data);
-        gallery_con.available_index.set(available_index + U256::from(1)); // create new raw index
+        gallery_con.available_index.set(available_index); // create new raw index
 
         // this is to alart the gallery that a new nft has been submited for review
         evm::log(SubmitedNft {
@@ -159,7 +160,7 @@ impl Mainx {
         let available_index = gallery_con.available_index.get();
 
         // Validate the NFT ID {making sure that it exist}
-        if nft_id >= available_index {
+        if nft_id > available_index {
             return Err(NftError::InvalidParameter(InvalidParameter { point: 1 }));
         }
 
@@ -182,7 +183,8 @@ impl Mainx {
 
         let creator_address = gallery_con.data_x.getter(nft_id).owner.get(); //getting the address of the creator of the nft
         // needed to created the nft identity in the gallery
-        let accepted_index = gallery_con.av_accepted_index.get(); //gettig the avialable accepted index
+        //starting index from 1 to reduce parallax error from none zero returns
+        let accepted_index = gallery_con.av_accepted_index.get() + U256::from(1); //gettig the avialable accepted index
 
         // this means that the nft has been rejected
         if state == 2 {
@@ -207,7 +209,7 @@ impl Mainx {
         });
 
         // this is to increase the accepted index
-        gallery_con.av_accepted_index.set(accepted_index + U256::from(1));
+        gallery_con.av_accepted_index.set(accepted_index);
 
         // Update the total number of NFTs in the system
         let old_total = self.total_nft.get();
@@ -277,8 +279,13 @@ impl Mainx {
 
         // getting the sub-data of the nft
         let g_c = gallery_con.data_x.getter(nc.get());
-        // returns the (creator of the nft, status of the nft, the metadat index of the nft)
+        // returns the (creator of the nft, status of the nft, the metadata index of the nft)
         Ok((g_c.owner.get(), g_c.status.get().to::<u8>(), g_c.data.get()))
+    }
+
+    // this is to get the total nft in the system that have been accepted
+    pub fn get_system_total_nft(&self) -> U256 {
+        self.total_nft.get()
     }
 }
 

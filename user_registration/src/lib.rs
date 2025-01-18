@@ -118,7 +118,7 @@ impl Users {
     }
 
     pub fn set_erc20(&mut self, er20_address: Address) -> Result<(), RegError> {
-        self.check_admin().map_err(|e| { e })?;
+        self.check_admin()?;
         self.erc20.set(er20_address);
         Ok(())
     }

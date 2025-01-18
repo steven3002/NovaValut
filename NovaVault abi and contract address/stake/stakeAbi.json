@@ -238,6 +238,35 @@
     {
         "inputs": [
             {
+                "internalType": "uint256",
+                "name": "gallery_id",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "nft_id",
+                "type": "uint256"
+            },
+            {
+                "internalType": "address",
+                "name": "user",
+                "type": "address"
+            }
+        ],
+        "name": "getPosition",
+        "outputs": [
+            {
+                "internalType": "uint8",
+                "name": "",
+                "type": "uint8"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
                 "internalType": "uint8",
                 "name": "",
                 "type": "uint8"

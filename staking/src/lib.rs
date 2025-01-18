@@ -58,8 +58,8 @@ sol_storage! {
 
 sol! {
     // event to show that a new gallary have been created
-    event Stakes(address indexed voter, uint256 indexed gallery_id, uint256  nft_id, uint256 bid);
-    event UpdatedCast(address indexed voter, uint256 indexed gallery_id, uint256 nft_id, uint256 old_bid, uint256 new_bid);
+    event Stakes(address indexed voter, uint256 indexed gallery_id, uint256 indexed  nft_id, uint256 bid);
+    event UpdatedCast(address indexed voter, uint256 indexed gallery_id, uint256 indexed nft_id, uint256 old_bid, uint256 new_bid);
     error InvalidParameter(uint8 point);
 }
 
@@ -101,7 +101,8 @@ impl Stake {
         let mut nft = gallery.nft.setter(nft_id); //gets the nft form the gallery
 
         // Use the total_votes to determine the index for the new vote
-        let available_index = nft.total_votes.get(); // the total votes also serves as a point of available index for a cast
+        // starting the index from 1 and not 0, so that it will not be affected  none value index
+        let available_index = nft.total_votes.get() + U256::from(1); // increases the total votes // the total votes also serves as a point of available index for a cast
 
         // Add the new vote to the casted mapping
         {
@@ -112,8 +113,8 @@ impl Stake {
         }
 
         // Collect data for the leaderboard update and release the mutable borrow
-        let total_votes = nft.total_votes.get() + U256::from(1); // increases the total votes
-        nft.total_votes.set(total_votes); // sets new votes
+        // increases the total votes
+        nft.total_votes.set(available_index); // sets new votes
 
         let gallery_total_vote = gallery.total_votes.get(); // increase the totalvotes in the gallery
         gallery.total_votes.set(gallery_total_vote + U256::from(1));
@@ -242,6 +243,35 @@ impl Stake {
     pub fn get_gallery_total_votes(&self, gallery_id: U256) -> U256 {
         self.room.getter(gallery_id).total_votes.get()
     }
+
+    pub fn get_position(
+        &self,
+        gallery_id: U256,
+        nft_id: U256,
+        user: Address
+    ) -> Result<u8, StakeError> {
+        let room = self.room.getter(gallery_id);
+        let nft = room.nft.getter(nft_id);
+        // Assuming the leaderboard has a defined size
+        for i in 0..=LEADERBOARD_SIZE {
+            let cast = nft.leaderboard.getter(U8::from(i)).get();
+            let casted = nft.casted.getter(cast);
+            let board_voter = casted.voter.get();
+            // if casted.bid.get() == U256::from(0){
+            //     return  // If the user is not found
+            //     Err(
+            //         StakeError::InvalidParameter(InvalidParameter {
+            //             point: 7, // Consider making this a more meaningful error code or message
+            //         })
+            //     )
+            // }
+            if board_voter == user {
+                return Ok(i as u8);
+            }
+        }
+
+        return Ok(LEADERBOARD_SIZE + 3);
+    }
 }
 
 impl Stake {
@@ -260,8 +290,16 @@ impl Stake {
             })
             .collect();
 
-        // Insert the new vote if it qualifies
-        leaderboard.push((vote_id, bid));
+        // Check if the vote_id already exists
+        if let Some(entry) = leaderboard.iter_mut().find(|entry| entry.0 == vote_id) {
+            // Update the existing bid if the new bid is higher
+            entry.1 = entry.1.max(bid);
+        } else {
+            // Add the new vote if it doesn't exist
+            leaderboard.push((vote_id, bid));
+        }
+
+        // Sort the leaderboard by bid in descending order
         leaderboard.sort_by(|a, b| b.1.cmp(&a.1)); // Sort by bid in descending order
         leaderboard.truncate(LEADERBOARD_SIZE.into()); // Keep only the top N entries
 

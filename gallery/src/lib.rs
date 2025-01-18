@@ -61,10 +61,10 @@ sol_storage! {
 
 sol! {
     // event to show that a new gallary have been created
-    event NewGallery(address indexed creator, string name, uint256 gallery_index, uint256 price);
+    event NewGallery(address indexed creator, string name, uint256 gallery_index, uint256 indexed price);
 
     // event to show that a user has joined a gallery
-    event JoinedGallery(uint256 indexed gallery_index, address member);
+    event JoinedGallery(uint256 indexed gallery_index, address indexed member);
 
 
     // my error
@@ -111,7 +111,8 @@ impl Subject {
             );
         }
 
-        let available_index = self.available_index.get();
+        // starting index from 1 to reduce paralax error
+        let available_index = self.available_index.get() + U256::from(1);
         let mut new_gallery = self.gallery.setter(available_index);
         new_gallery.name.set_str(name.clone());
         new_gallery.meta_data.set_str(meta_data);
@@ -137,7 +138,7 @@ impl Subject {
             price,
         });
 
-        self.available_index.set(available_index + U256::from(1));
+        self.available_index.set(available_index);
         Ok(())
     }
 
@@ -194,14 +195,14 @@ impl Subject {
 
     //  ===== view funtions  ====== //
     pub fn get_last_index(&self) -> U256 {
-        self.available_index.get() - U256::from(1)
+        self.available_index.get()
     }
 
     pub fn get_gallery(
         &self,
         gallery_index: U256
     ) -> Result<(Address, String, String, u32, u64, U256, u64, u64, U256), GalleryError> {
-        if gallery_index >= self.available_index.get() {
+        if gallery_index > self.available_index.get() {
             return Err(
                 GalleryError::InvalidParameter(InvalidParameter {
                     point: 1,

@@ -90,7 +90,7 @@ impl Cast {
             );
         }
 
-        // self.check_time(start, end)?; //checks if the gallery voting period has started
+        self.check_time(start, end)?; //checks if the gallery voting period has started
 
         let default_x = Address::from([0x00; 20]);
         let nft_creator = self.get_creator(gallery_id, nft_id)?; //gets the creator of the nft
