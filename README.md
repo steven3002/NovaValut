@@ -1,5 +1,6 @@
 ﻿# NovaVault
 
+![WhatsApp Image 2025-02-27 at 20 26 14_1f6ef31a](https://github.com/user-attachments/assets/5c0e38f9-9512-4bb4-9714-75e93f820ed2)
 
 NovaVault is a cutting-edge decentralized platform that redefines NFT valuation by combining community-driven validation with a robust, multi-layered smart contract architecture built on Arbitrum Stylus Rust. This ecosystem empowers artists, musicians, novel writers, and creative communities to monetize and authenticate their digital creations in a transparent and engaging way.
 
@@ -121,8 +122,8 @@ We welcome contributions from developers and creative minds alike! To contribute
 Have questions or need support? Reach out to us:
 
 - **Email:** gospelifeadi57@gmail.com 
-- **Twitter:** [@NovaValue](https://twitter.com/novavalue)  
-- **Discord:** [Nova Value Community](https://discord.gg/novavalue)
+- **Twitter:** [@NovaVault](https://twitter.com/novavalue)  
+
 
 ---
 
