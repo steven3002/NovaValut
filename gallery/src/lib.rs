@@ -102,7 +102,7 @@ impl Subject {
             meta_data.is_empty() ||
             voting_start < block::timestamp() ||
             voting_end < block::timestamp() ||
-            voting_start >= voting  _end
+            voting_start >= voting_end
         {
             return Err(
                 GalleryError::InvalidParameter(InvalidParameter {
