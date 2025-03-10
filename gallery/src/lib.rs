@@ -61,10 +61,10 @@ sol_storage! {
 
 sol! {
     // event to show that a new gallary have been created
-    event NewGallery(address indexed creator, string name, uint256 gallery_index, uint256 indexed price);
+    event NewGallery(address indexed creator, string name, uint256 gallery_index, uint256 indexed price, uint64 time);
 
     // event to show that a user has joined a gallery
-    event JoinedGallery(uint256 indexed gallery_index, address indexed member);
+    event JoinedGallery(uint256 indexed gallery_index, address indexed member, uint64 time );
 
 
     // my error
@@ -102,7 +102,7 @@ impl Subject {
             meta_data.is_empty() ||
             voting_start < block::timestamp() ||
             voting_end < block::timestamp() ||
-            voting_start >= voting_end
+            voting_start >= voting  _end
         {
             return Err(
                 GalleryError::InvalidParameter(InvalidParameter {
@@ -136,6 +136,7 @@ impl Subject {
             name,
             gallery_index: available_index,
             price,
+            time: block::timestamp() as u64,
         });
 
         self.available_index.set(available_index);
@@ -162,6 +163,7 @@ impl Subject {
         evm::log(JoinedGallery {
             gallery_index,
             member: user,
+            time: block::timestamp() as u64,
         });
 
         // this will give them the ticket

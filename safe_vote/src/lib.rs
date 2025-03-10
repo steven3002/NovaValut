@@ -48,6 +48,11 @@ sol_interface! {
 sol! {
     
         error InvalidParameter(uint8 point);
+        error InvalidGallery(uint8 point);
+        error InvalidState(uint8 point);
+        error InvalidCreator(uint8 point);
+        error InvalidTime(uint8 point);
+        error InvalidCreatorState(uint8 point);
     
         
 }
@@ -55,6 +60,11 @@ sol! {
 #[derive(SolidityError)]
 pub enum CastError {
     InvalidParameter(InvalidParameter),
+    InvalidGallery(InvalidGallery),
+    InvalidState(InvalidState),
+    InvalidCreator(InvalidCreator),
+    InvalidTime(InvalidTime),
+    InvalidCreatorState(InvalidCreatorState),
 }
 
 #[public]
@@ -66,12 +76,12 @@ impl Cast {
         nft_id: U256,
         bid: U256
     ) -> Result<(), CastError> {
-        // getting gallary info
+        // getting gallary info;
         let (start, end, minimum_bid) = match self.get_gal_info(gallery_id) {
             Ok((start, end, minimum_bid)) => (start, end, minimum_bid),
             Err(_) => {
                 return Err(
-                    CastError::InvalidParameter(InvalidParameter {
+                    CastError::InvalidGallery(InvalidGallery {
                         point: 202,
                     })
                 );
@@ -84,7 +94,7 @@ impl Cast {
             self.has_voted(gallery_id) // makes sure that the user has not voted
         {
             return Err(
-                CastError::InvalidParameter(InvalidParameter {
+                CastError::InvalidState(InvalidState {
                     point: 20,
                 })
             );
@@ -95,15 +105,16 @@ impl Cast {
         let default_x = Address::from([0x00; 20]);
         let nft_creator = self.get_creator(gallery_id, nft_id)?; //gets the creator of the nft
 
+        // thia also a way to make sure that the nft exists
         if nft_creator == default_x {
             return Err(
-                CastError::InvalidParameter(InvalidParameter {
+                CastError::InvalidCreator(InvalidCreator {
                     point: 109,
                 })
             );
         }
 
-        self.fund_tf(msg::sender(), bid)?; // attempts to transfer the funds to the creator
+        self.fund_tf(nft_creator, bid)?; // attempts to transfer the funds to the creator
         self.stake(gallery_id, nft_id, bid)?; // pass data to the unsafe contract
         Ok(())
     }
@@ -194,7 +205,7 @@ impl Cast {
             return Ok(());
         }
         Err(
-            CastError::InvalidParameter(InvalidParameter {
+            CastError::InvalidTime(InvalidTime {
                 point: 19,
             })
         )
@@ -292,7 +303,7 @@ impl Cast {
         match gallery_contract.get_nft(config, gallery_id, nft_id, false) {
             Ok((creator, _, _)) => Ok(creator),
             // Ok(_) => Err(CastError::InvalidParameter(InvalidParameter { point: 191 })),
-            Err(_) => Err(CastError::InvalidParameter(InvalidParameter { point: 181 })),
+            Err(_) => Err(CastError::InvalidCreatorState(InvalidCreatorState { point: 181 })),
         }
     }
 

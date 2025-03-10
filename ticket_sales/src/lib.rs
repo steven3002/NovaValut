@@ -2,7 +2,7 @@
 extern crate alloc;
 
 use alloy_primitives::{ Address, U256 };
-use stylus_sdk::{ prelude::*, msg, evm };
+use stylus_sdk::{ prelude::*, msg, evm, block };
 use alloy_sol_types::sol;
 
 use stylus_sdk::call::Call;
@@ -33,9 +33,9 @@ sol_interface! {
 
 sol! {
     // event to show that a ticket has been bought
-    event BoughtTicket(address indexed buyer, uint256  gallery_index, uint256 price);
+    event BoughtTicket(address indexed buyer, uint256 indexed gallery_index, uint256 price, uint64 time);
 
-    event SoldTicket(address indexed seller, uint256 gallery_index, uint256 price);
+    event SoldTicket(address indexed seller, uint256 indexed gallery_index, uint256 price, uint64 time);
 
     // my error
     // error to show invalid parameter
@@ -96,6 +96,7 @@ impl Buy {
             buyer: msg::sender(),
             gallery_index,
             price,
+            time: block::timestamp() as u64,
         });
 
         // this event to to show the user that a ticket has been sold
@@ -103,6 +104,7 @@ impl Buy {
             seller: creator,
             gallery_index,
             price,
+            time: block::timestamp() as u64,
         });
 
         Ok(())

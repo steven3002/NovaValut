@@ -5,7 +5,7 @@ use alloc::string::String;
 use alloy_primitives::{ Address, U256 };
 use alloy_sol_types::sol;
 use core::marker::PhantomData;
-use stylus_sdk::{ evm, msg, prelude::*, call::{ call, Call } };
+use stylus_sdk::{ evm, msg, prelude::*, block, call::{ call, Call } };
 
 pub trait Erc20Params {
     /// Immutable token name
@@ -49,11 +49,11 @@ sol_storage! {
 
 // Declare events and Solidity error types
 sol! {
-    event Transfer(address indexed from, address indexed to, uint256 value);
-    event Approval(address indexed owner, address indexed spender, uint256 value);
-    event TokenSold(address indexed buyer, uint256 indexed price, uint256 indexed value, uint256 market);
-    event SetMarket(uint256 indexed old_market, uint256 indexed new_market);
-    event SetPrice(uint256 indexed old_price, uint256 indexed new_price);
+    event Transfer(address indexed from, address indexed to, uint256 value, uint64 time);
+    event Approval(address indexed owner, address indexed spender, uint256 value, uint64 time);
+    event TokenSold(address indexed buyer, uint256 indexed price, uint256 indexed value, uint256 market, uint64 time);
+    event SetMarket(uint256 indexed old_market, uint256 indexed new_market, uint64 time);
+    event SetPrice(uint256 indexed old_price, uint256 indexed new_price, uint64 time);
 
     error InsufficientBalance(address from, uint256 have, uint256 want);
     error InsufficientAllowance(address owner, address spender, uint256 have, uint256 want);
@@ -149,6 +149,7 @@ impl Erc20 {
             owner: msg::sender(),
             spender,
             value,
+            time: block::timestamp() as u64,
         });
         true
     }
@@ -177,6 +178,7 @@ impl Erc20 {
         evm::log(SetPrice {
             old_price,
             new_price: price,
+            time: block::timestamp() as u64,
         });
         Ok(())
     }
@@ -188,6 +190,7 @@ impl Erc20 {
         evm::log(SetMarket {
             old_market,
             new_market: market,
+            time: block::timestamp() as u64,
         });
         Ok(())
     }
@@ -242,6 +245,7 @@ impl Erc20 {
             price,
             value,
             market,
+            time: block::timestamp() as u64,
         });
 
         Ok(())
@@ -308,7 +312,7 @@ impl Erc20 {
         to_balance.set(new_to_balance);
 
         // Emitting the transfer event
-        evm::log(Transfer { from, to, value });
+        evm::log(Transfer { from, to, value, time: block::timestamp() as u64 });
         Ok(())
     }
 
@@ -327,6 +331,7 @@ impl Erc20 {
             from: Address::ZERO,
             to: address,
             value,
+            time: block::timestamp() as u64,
         });
 
         Ok(())
@@ -356,6 +361,7 @@ impl Erc20 {
             from: address,
             to: Address::ZERO,
             value,
+            time: block::timestamp() as u64,
         });
 
         Ok(())

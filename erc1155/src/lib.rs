@@ -1,9 +1,9 @@
 #![cfg_attr(not(any(feature = "export-abi", test)), no_main)]
 extern crate alloc;
 
-use alloy_primitives::{ Address, U256 };
+use alloy_primitives::{ Address, U256, U32 };
 use alloy_sol_types::sol;
-use stylus_sdk::{ evm, msg, prelude::* };
+use stylus_sdk::{ evm, msg, block, prelude::* };
 use core::marker::PhantomData;
 
 pub trait Erc1155Params {
@@ -18,9 +18,9 @@ impl Erc1155Params for NovaParams {
 
 // ERC-1155 Events
 sol! {
-    event TransferSingle(address indexed operator, address indexed from, address indexed to, uint256 id, uint256 value);
-    event TransferBatch(address indexed operator, address indexed from, address indexed to, uint256[] ids, uint256[] values);
-    event ApprovalForAll(address indexed account, address indexed operator, bool approved);
+    event TransferSingle(address indexed operator, address indexed from, address indexed to, uint256 id, uint256 value, uint32 time );
+    event TransferBatch(address indexed operator, address indexed from, address indexed to, uint256[] ids, uint256[] values, uint32 time);
+    event ApprovalForAll(address indexed account, address indexed operator, bool approved, uint32 time);
     event URI(string value, uint256 indexed id);
 
     error InvalidParameter(uint8 point);
@@ -84,6 +84,7 @@ impl Erc1155 {
             account: msg::sender(),
             operator,
             approved,
+            time: block::timestamp() as u32,
         });
     }
 
@@ -108,6 +109,7 @@ impl Erc1155 {
             to,
             id,
             value: amount,
+            time: block::timestamp() as u32,
         });
 
         Ok(())
@@ -138,6 +140,7 @@ impl Erc1155 {
             to,
             ids,
             values: amounts,
+            time: block::timestamp() as u32,
         });
 
         Ok(())
@@ -165,11 +168,12 @@ impl Erc1155 {
         new_supply.set(old_supply + amount);
 
         evm::log(TransferSingle {
-            operator: Address::ZERO,
+            operator: msg::sender(),
             from: Address::ZERO,
             to,
             id,
             value: amount,
+            time: block::timestamp() as u32,
         });
 
         Ok(())
@@ -202,11 +206,12 @@ impl Erc1155 {
         }
 
         evm::log(TransferBatch {
-            operator: Address::ZERO,
+            operator: msg::sender(),
             from: Address::ZERO,
             to,
             ids: ids.clone(),
             values: amounts.clone(),
+            time: block::timestamp() as u32,
         });
 
         Ok(())

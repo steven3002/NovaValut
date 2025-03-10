@@ -1,10 +1,9 @@
 #![cfg_attr(not(any(feature = "export-abi", test)), no_main)]
 extern crate alloc;
 
-use alloy_primitives::{ Address, U256, U8, U32 };
+use alloy_primitives::{ Address, U256, U8, U32, U64 };
 use stylus_sdk::{ prelude::*, msg, evm, block };
 use alloy_sol_types::sol;
-
 // so the nft will be minted with the gallery it was in
 // and the index of its resulting crowd staking
 
@@ -58,8 +57,8 @@ sol_storage! {
 
 sol! {
     // event to show that a new gallary have been created
-    event Stakes(address indexed voter, uint256 indexed gallery_id, uint256 indexed  nft_id, uint256 bid);
-    event UpdatedCast(address indexed voter, uint256 indexed gallery_id, uint256 indexed nft_id, uint256 old_bid, uint256 new_bid);
+    event Stakes(address indexed voter, uint256 indexed gallery_id, uint256 indexed  nft_id, uint256 bid, uint64 time);
+    event UpdatedCast(address indexed voter, uint256 indexed gallery_id, uint256 indexed nft_id, uint256 old_bid, uint256 new_bid, uint64 time);
     error InvalidParameter(uint8 point);
 }
 
@@ -130,6 +129,7 @@ impl Stake {
             gallery_id,
             nft_id,
             bid,
+            time: block::timestamp() as u64,
         });
         Ok(())
     }
@@ -179,6 +179,7 @@ impl Stake {
             nft_id,
             old_bid,
             new_bid: bid,
+            time: block::timestamp() as u64,
         });
         Ok(())
     }

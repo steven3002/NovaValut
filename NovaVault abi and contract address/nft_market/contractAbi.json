@@ -1,0 +1,151 @@
+[
+    {
+        "type": "function",
+        "name": "offer",
+        "inputs": [
+            {
+                "name": "nft_id",
+                "type": "uint256"
+            },
+            {
+                "name": "amount",
+                "type": "uint256"
+            },
+            {
+                "name": "price",
+                "type": "uint256"
+            },
+            {
+                "name": "for_sale",
+                "type": "bool"
+            }
+        ],
+        "outputs": [],
+        "stateMutability": "nonpayable"
+    },
+    {
+        "type": "function",
+        "name": "getCostBatch",
+        "inputs": [
+            {
+                "name": "owners",
+                "type": "address[]"
+            },
+            {
+                "name": "nft_ids",
+                "type": "uint256[]"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "tuple[]",
+                "components": [
+                    {
+                        "name": "cost",
+                        "type": "uint256"
+                    },
+                    {
+                        "name": "for_sale",
+                        "type": "bool"
+                    },
+                    {
+                        "name": "amount_available",
+                        "type": "uint256"
+                    }
+                ]
+            }
+        ],
+        "stateMutability": "view"
+    },
+    {
+        "type": "function",
+        "name": "buy",
+        "inputs": [
+            {
+                "name": "owner",
+                "type": "address"
+            },
+            {
+                "name": "nft_id",
+                "type": "uint256"
+            },
+            {
+                "name": "amount",
+                "type": "uint256"
+            }
+        ],
+        "outputs": [],
+        "stateMutability": "nonpayable"
+    },
+    {
+        "type": "function",
+        "name": "setErc1155",
+        "inputs": [
+            {
+                "name": "erc1155",
+                "type": "address"
+            },
+            {
+                "name": "erc20",
+                "type": "address"
+            }
+        ],
+        "outputs": [],
+        "stateMutability": "nonpayable"
+    },
+    {
+        "type": "error",
+        "name": "InvalidParameter",
+        "inputs": [
+            {
+                "name": "param",
+                "type": "uint8"
+            }
+        ]
+    },
+    {
+        "type": "error",
+        "name": "NotForSale",
+        "inputs": [
+            {
+                "name": "owner",
+                "type": "address"
+            },
+            {
+                "name": "nft_id",
+                "type": "uint256"
+            }
+        ]
+    },
+    {
+        "type": "error",
+        "name": "InSufficientBalance",
+        "inputs": [
+            {
+                "name": "balance_needed",
+                "type": "uint256"
+            }
+        ]
+    },
+    {
+        "type": "error",
+        "name": "InSufficientAllowance",
+        "inputs": [
+            {
+                "name": "allowance_needed",
+                "type": "uint256"
+            }
+        ]
+    },
+    {
+        "type": "error",
+        "name": "NoAccess",
+        "inputs": [
+            {
+                "name": "id",
+                "type": "uint256"
+            }
+        ]
+    }
+]

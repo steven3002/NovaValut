@@ -80,6 +80,7 @@ impl NftStorage {
             owner: msg::sender(),
             gallery_index: gallery_id,
             nft_id: available_index,
+            // time: block::timestamp() as u64,
         });
 
         Ok(())

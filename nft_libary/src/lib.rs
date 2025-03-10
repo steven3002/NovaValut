@@ -58,9 +58,9 @@ sol! {
 
     
 
-    event AcceptedNft(address indexed creator, uint256 indexed gallery_id, uint256 approved_nft_id);
-    event RegetedNft(address indexed creator, uint256 indexed gallery_id, uint256 nft_id);
-    event SubmitedNft(uint256 indexed gallery_id, address creator, uint256 nft_index);
+    event AcceptedNft(address indexed creator, uint256 indexed gallery_id, uint256 approved_nft_id, uint64 time );
+    event RejectedNft(address indexed creator, uint256 indexed gallery_id, uint256 nft_id, uint64 time);
+    event SubmitedNft(uint256 indexed gallery_id, address creator, uint256 nft_index, uint64 time);
 
   
     // my error
@@ -120,6 +120,7 @@ impl Mainx {
             gallery_id,
             creator: user,
             nft_index: available_index,
+            time: block::timestamp() as u64,
         });
 
         Ok(())
@@ -188,10 +189,11 @@ impl Mainx {
 
         // this means that the nft has been rejected
         if state == 2 {
-            evm::log(RegetedNft {
+            evm::log(RejectedNft {
                 creator: creator_address,
                 gallery_id,
                 nft_id,
+                time: block::timestamp() as u64,
             });
 
             return Ok(());
@@ -206,6 +208,7 @@ impl Mainx {
             creator: creator_address,
             gallery_id,
             approved_nft_id: accepted_index,
+            time: block::timestamp() as u64,
         });
 
         // this is to increase the accepted index
